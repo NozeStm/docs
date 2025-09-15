@@ -13,4 +13,9 @@ gateway 172.16.0.254
 ```bash
 apt update && apt upgrade -y
 apt install openssl
+
 ```
+
+##3. Génération du certificat de l'autorité de certification
+- Création de la clé privée de l'autorité de certification
+```bash
