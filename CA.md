@@ -13,9 +13,16 @@ gateway 172.16.0.254
 ```bash
 apt update && apt upgrade -y
 apt install openssl
-
 ```
+#2
 
 ##3. Génération du certificat de l'autorité de certification
 - Création de la clé privée de l'autorité de certification
 ```bash
+openssl genrsa -ds3
+chmod 400 cakey.pem
+```
+-Création du certificat auto-signé de l'autorité de certification
+```bash
+cd /etc/ssl/sodecaf
+openssl req -news -days 
