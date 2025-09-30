@@ -7,3 +7,7 @@ Get-WindowsCapability -Name "RSAT*" -Online | Select-Object -Property DisplayNam
 ```powershell
 Get-WindowsCapability -Name "RSAT*" -Online | Select-Object -Property Name, DisplayName
 ```
+3. Installer une fonctionnalité
+```powershell
+Add-WindowsCapability -Online -Name "<nom de l'outil RSAT>"
+```
