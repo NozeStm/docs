@@ -1,5 +1,3 @@
-Voici une **documentation au format Markdown** (prête à être collée sur GitHub) résumant le tutoriel de IT‑Connect pour installer Graylog sur Debian :
-
 ````markdown
 # Déploiement de Graylog sur Debian 12 pour centraliser et analyser les logs
 
@@ -246,20 +244,3 @@ Dans l’interface Graylog :
   * Sécuriser OpenSearch en activant le module de sécurité, mettre en place des **alertes email** via les notifications Graylog. ([IT-Connect][1])
 
 ---
-
-## Ressources utiles
-
-* Documentation officielle **Graylog** ([IT-Connect][1])
-* Documentation **OpenSearch** ([IT-Connect][1])
-
----
-
-**Auteur original :** Florian Burnel (IT-Connect) ([IT-Connect][1])
-
-```
-
-Si tu veux que j’adapte cette doc pour un README GitHub (avec des badges, des sections “Comment contribuer”, etc.), je peux le faire — veux-tu que je le fasse ?
-::contentReference[oaicite:42]{index=42}
-```
-
-[1]: https://www.it-connect.fr/tuto-graylog-sur-debian-centraliser-et-analyser-logs/?utm_source=chatgpt.com "Centralisation des logs : installation de Graylog sur Debian"
