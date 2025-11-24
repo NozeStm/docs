@@ -5,27 +5,27 @@
 Graylog est une solution open-source de type *puits de logs*, permettant la centralisation, le stockage et l'analyse en temps réel des journaux de machines et d’équipements réseau. Dans ce tutoriel, on installe Graylog (version gratuite) sur une machine Debian 12.  
 Graylog reçoit les logs (par exemple via syslog), les indexe et offre des capacités de recherche, de corrélation et d’alerte.  
 > Remarque : la version gratuite Graylog Open n’est pas un SIEM complet (manquent certaines fonctions de détection d’intrusion).  
-:contentReference[oaicite:0]{index=0}  
+
 
 ---
 
 ## II. Prérequis  
-- Version de Graylog : **6.1** recommandée. :contentReference[oaicite:1]{index=1}  
+- Version de Graylog : **6.1** recommandée.
 - Composants nécessaires sur le serveur :  
-  - **MongoDB 6** (requis par Graylog) :contentReference[oaicite:2]{index=2}  
-  - **OpenSearch** (fork open-source d’Elasticsearch) :contentReference[oaicite:3]{index=3}  
+  - **MongoDB 6** (requis par Graylog) 
+  - **OpenSearch** (fork open-source d’Elasticsearch) 
   - **OpenJDK 17** :contentReference[oaicite:4]{index=4}  
-- Machine cible : Debian 12 (les instructions sont faites pour cette version, mais l’architecture peut être distribuée sur plusieurs nœuds). :contentReference[oaicite:5]{index=5}  
-- Ressources recommandées : au moins **8 Go de RAM**, **256 Go d’espace disque**, pour garantir les performances. :contentReference[oaicite:6]{index=6}  
+- Machine cible : Debian 12 (les instructions sont faites pour cette version, mais l’architecture peut être distribuée sur plusieurs nœuds).
+- Ressources recommandées : au moins **8 Go de RAM**, **256 Go d’espace disque**, pour garantir les performances.
 - Configuration initiale :  
-  - Adresse IP statique sur la machine Graylog. :contentReference[oaicite:7]{index=7}  
-  - Mise à jour du système (`apt-get update`) et installation des mises à jour. :contentReference[oaicite:8]{index=8}  
+  - Adresse IP statique sur la machine Graylog.
+  - Mise à jour du système (`apt-get update`) et installation des mises à jour. 
   - Configuration du fuseau horaire :  
     ```bash
     sudo timedatectl set-timezone Europe/Paris
     ```  
     :contentReference[oaicite:9]{index=9}  
-  - Synchronisation de l’horloge via NTP (installer/configurer un client NTP). :contentReference[oaicite:10]{index=10}  
+  - Synchronisation de l’horloge via NTP (installer/configurer un client NTP).
 
 ---
 
