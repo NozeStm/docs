@@ -37,7 +37,7 @@ sudo apt-get update
 sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen  
 ````
 
-([IT-Connect][1])
+
 
 ---
 
