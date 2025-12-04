@@ -1,3 +1,5 @@
+Absolument. Je vais refaire la documentation complète en intégrant la version détaillée du script Bash que vous avez fournie, en mettant à jour les jetons correspondants.
+
 -----
 
 # 📚 Documentation du TP : Gestion ITSM des Incidents de Sécurité (GLPI & Wazuh)
@@ -7,10 +9,10 @@ Ce document retrace les étapes de mise en place d'un système de gestion des ti
 ## 🎯 Objectifs du TP
 
   * Comprendre le rôle d'un outil ITSM.
-  * Déployer et configurer l'outil open-source ITSM **GLPI**.
+  * Déployer et configurer **GLPI**.
   * Activer et tester l'**API REST de GLPI**.
-  * Automatiser la création de tickets incidents dans GLPI à partir des alertes générées par **Wazuh** (SIEM/IDS) via un script d'**Active Response**.
-  * **Gérer les tickets incidents générés dans GLPI.**
+  * Automatiser la création de tickets incidents dans GLPI à partir des alertes générées par **Wazuh** via un script d'**Active Response**.
+  * Gérer les tickets incidents générés dans GLPI (processus SOC N1).
 
 -----
 
@@ -18,47 +20,50 @@ Ce document retrace les étapes de mise en place d'un système de gestion des ti
 
 ### 1.1 Qu'est-ce qu'un outil ITSM ?
 
-Un outil ITSM (**Information Technology Service Management**) est une solution logicielle qui aide les entreprises à gérer l'ensemble des services informatiques8]. Cet outil permet de planifier, concevoir, déployer, exploiter et optimiser les services informatiques.
+Un outil **ITSM** (**Information Technology Service Management**) est une solution logicielle conçue pour gérer l'ensemble des services informatiques d'une organisation.
 
-### 1.2 Rôle de l'ITSM en Cybersécurité
+En **cybersécurité**, il permet :
 
-L'utilisation d'un outil ITSM en cybersécurité permet:
+  * La **réduction des délais de réponse** par l'automatisation.
+  * L'**amélioration de la coordination** entre les équipes.
+  * La **traçabilité** complète des incidents.
+  * La **standardisation** des processus.
 
-  * **La réduction des délais de réponse**.
-  * **L'amélioration de la coordination et communication**.
-  * **D'apporter une traçabilité** pour les audits et les analyses post-incident.
-  * **La standardisation des processus** via des modèles prédéfinis.
+### 1.2 Présentation de GLPI
 
-### 1.3 Présentation de GLPI
-
-**GLPI** (**Gestionnaire Libre de Parc Informatique**) est un logiciel open-source de gestion des services informatiques (ITSM) et des actifs32]. Son module de gestion des tickets est au cœur de son fonctionnement 33], permettant d'enregistrer, prioriser, assigner et suivre les incidents.
+**GLPI** (**Gestionnaire Libre de Parc Informatique**) est la solution open-source choisie. Son module de gestion des tickets est central pour enregistrer, prioriser et suivre le cycle de vie des incidents.
 
 -----
 
 ## 2\. Infrastructure et Préparation
 
-### 2.1 Configuration de l'Infrastructure
+### 2.1 Schéma de l'Infrastructure
 
-Le serveur **SRV-GLPI** a l'adresse IP `172.16.0.8`  et le serveur **SRV-WAZUH** a l'adresse IP `172.16.0.7` dans le réseau LAN SODECAF (`172.16.0.0/24`). L'accès à GLPI se fait via `http://172.16.0.8/`89].
+L'intégration est réalisée sur le réseau SODECAF.
 
-  * **Identifiant Administrateur GLPI :** `glpi` 91]
-  * **Mot de passe GLPI :** `glpi` 92]
+  * **SRV-GLPI** (Serveur ITSM) : `172.16.0.8`
+  * **SRV-WAZUH** (Serveur SIEM/IDS) : `172.16.0.7`
+  * Accès GLPI : `http://172.16.0.8/`
 
 -----
 
 ## 3\. Configuration de l'API GLPI
 
-Wazuh utilise l'API de GLPI 94] pour créer des tickets, nécessitant un jeton d'application (`app_token`) et un jeton utilisateur (`user_token`) pour l'authentification96].
+L'API de GLPI est configurée pour permettre à Wazuh de s'authentifier et de créer des tickets en utilisant les jetons (`app_token` et `user_token`).
 
-### 3.1 Jeton d'Application et Utilisateur
+### 3.1 Activation de l'API
 
-Les jetons utilisés pour l'automatisation sont les suivants :
+1.  Dans GLPI, naviguer vers **Configuration \> Générale \> API**.
+2.  Activer l'**API Rest** et la connexion avec un **jeton externe**.
 
-| Jeton | Description | Valeur fournie |
+### 3.2 Jetons d'Application et Utilisateur
+
+Les jetons configurés dans GLPI pour l'utilisateur API `wazuh` sont :
+
+| Jeton | Description | Valeur à utiliser (issue de la configuration GLPI) |
 | :--- | :--- | :--- |
-| **`app_token`** | Jeton de l'application cliente (Wazuh API) | `b05J3XE12uyo6CF7AJ1pjDzE7kC0hGn9E2tZcehb` |
-| **`user_token`** | Jeton de l'utilisateur `wazuh` | `LvCJPVEakByk87W6UsCxZtrpQBRE1LcgHnCXy1pJ` |
-| **`session_token`** | Jeton temporaire de session (Exemple) | `j55dgu3jqth79662nsnim79sj5` |
+| **`app_token`** | Jeton de l'application cliente (Wazuh API Client) | `IbQdjd32WUg5wAJrpQb7ZwnWdyVHLfITNriLrQHy` |
+| **`user_token`** | Jeton de l'utilisateur `wazuh` | `wPNzhNzcwZNdabEJFBVzT4xkBg2BnWyZwQhlDWhv` |
 
 -----
 
@@ -66,30 +71,30 @@ Les jetons utilisés pour l'automatisation sont les suivants :
 
 ### 4.1 Test d'Authentification (`initSession`)
 
-Test de connexion à l'API GLPI pour obtenir un jeton de session.
+Cette commande permet d'ouvrir une session API et de recevoir un `session_token` temporaire.
 
 ```bash
 curl -X GET \
 -H 'Content-Type: application/json' \
--H "Authorization: user_token LvCJPVEakByk87W6UsCxZtrpQBRE1LcgHnCXy1pJ" \
--H "App-Token: b05J3XE12uyo6CF7AJ1pjDzE7kC0hGn9E2tZcehb" \
+-H "Authorization: user_token wPNzhNzcwZNdabEJFBVzT4xkBg2BnWyZwQhlDWhv" \
+-H "App-Token: IbQdjd32WUg5wAJrpQb7ZwnWdyVHLfITNriLrQHy" \
 'http://172.16.0.8/apirest.php/initSession?get_full_session=true'
 ```
 
 ### 4.2 Génération Manuelle d'un Ticket de Test
 
-Création d'un ticket test via l'API, en utilisant le jeton de session.
+Utilisation du `session_token` reçu pour créer un ticket test. (Remplacer `VOTRE_SESSION_TOKEN` par le jeton obtenu à l'étape 4.1).
 
 ```bash
 curl -X POST \
 -H 'Content-Type: application/json' \
--H 'Authorization: user_token LvCJPVEakByk87W6UsCxZtrpQBRE1LcgHnCXy1pJ' \
--H 'App-Token: b05J3XE12uyo6CF7AJ1pjDzE7kC0hGn9E2tZcehb' \
--H 'Session-Token: j55dgu3jqth79662nsnim79sj5' \
+-H 'Authorization: user_token wPNzhNzcwZNdabEJFBVzT4xkBg2BnWyZwQhlDWhv' \
+-H 'App-Token: IbQdjd32WUg5wAJrpQb7ZwnWdyVHLfITNriLrQHy' \
+-H 'Session-Token: VOTRE_SESSION_TOKEN' \
 -d'{
 "input": {
 "name": "Alerte Wazuh - Test API",
-"content": "Ceci est un ticket créé automatiquement depuis Wazuh via API",
+"content": "Ticket de test manuel créé depuis Wazuh.",
 "priority": 4,
 "urgency": 3,
 "impact": 3,
@@ -105,9 +110,9 @@ http://172.16.0.8/apirest.php/Ticket
 
 ```bash
 curl -X GET \
--H 'Authorization: user_token LvCJPVEakByk87W6UsCxZtrpQBRE1LcgHnCXy1pJ' \
--H 'App-Token: b05J3XE12uyo6CF7AJ1pjDzE7kC0hGn9E2tZcehb' \
--H 'Session-Token: j55dgu3jqth79662nsnim79sj5' \
+-H 'Authorization: user_token wPNzhNzcwZNdabEJFBVzT4xkBg2BnWyZwQhlDWhv' \
+-H 'App-Token: IbQdjd32WUg5wAJrpQb7ZwnWdyVHLfITNriLrQHy' \
+-H 'Session-Token: VOTRE_SESSION_TOKEN' \
 http://172.16.0.8/apirest.php/killSession
 ```
 
@@ -115,78 +120,137 @@ http://172.16.0.8/apirest.php/killSession
 
 ## 5\. Automatisation avec un Script Bash (Active Response)
 
-### 5.1 Script `/var/ossec/active-response/bin/glpi_ticket.sh`
+### 5.1 Script `glpi_ticket.sh`
 
-Le script Bash est utilisé pour automatiser la génération des tickets incidents depuis Wazuh213].
+Ce script est le cœur de l'automatisation. Il est placé dans le répertoire `/var/ossec/active-response/bin/` sur le serveur Wazuh. Il se charge de lire les données JSON de l'alerte, d'établir la connexion API et de créer le ticket.
 
-**Extraits du script avec les jetons mis à jour221]:**
+**Chemin :** `/var/ossec/active-response/bin/glpi_ticket.sh`
 
 ```bash
+#!/bin/bash
+# Script Active Response Wazuh → GLPI
+# Version améliorée avec logs et mapping gravité → priorité
+
 GLPI_URL="http://172.16.0.8/apirest.php"
-APP_TOKEN="b05J3XE12uyo6CF7AJ1pjDzE7kC0hGn9E2tZcehb"
-USER_TOKEN="LvCJPVEakByk87W6UsCxZtrpQBRE1LcgHnCXy1pJ"
+APP_TOKEN="IbQdjd32WUg5wAJrpQb7ZwnWdyVHLfITNriLrQHy"
+USER_TOKEN="wPNzhNzcwZNdabEJFBVzT4xkBg2BnWyZwQhlDWhv"
+
 LOGFILE="/var/log/glpi_ticket.log"
-# ...
+
+# Lire tout le JSON d’entrée (multi-lignes possible)
+INPUT_JSON=$(cat)
+
+ALERT_DATE=$(date '+%Y-%m-%d %H:%M:%S %z')
+
+echo "$(date) - Script exécuté par Wazuh" >> /var/log/glpi_ticket.log
+echo "$INPUT_JSON" >> /var/log/glpi_ticket.log
+
+# Extraire infos utiles avec jq
+RULE_ID=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.rule.id')
+RULE_DESC=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.rule.description')
+AGENT_NAME=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.agent.name')
+SRC_IP=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.data.srcip // empty')
+SEVERITY=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.rule.level')
+LOG=$(echo "$INPUT_JSON" | jq -r '.parameters.alert.full_log')
+
+# Mapping gravité Wazuh (level) → priorité GLPI
+if [ "$SEVERITY" -le 3 ]; then
+  PRIORITY=1   # Faible
+elif [ "$SEVERITY" -le 7 ]; then
+  PRIORITY=3   # Moyen
+else
+  PRIORITY=5   # Critique
+fi
+
+# Ouvrir une session GLPI
+SESSION_TOKEN=$(curl -s -X GET \
+  -H "Authorization: user_token $USER_TOKEN" \
+  -H "App-Token: $APP_TOKEN" \
+  "$GLPI_URL/initSession" | jq -r '.session_token')
+
+# Créer le ticket
+RESPONSE=$(curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -H "App-Token: $APP_TOKEN" \
+  -H "Session-Token: $SESSION_TOKEN" \
+  -d "{
+    \"input\": {
+      \"name\": \"Alerte Wazuh - $RULE_DESC\",
+      \"content\": \"🚨 Alerte Wazuh\n\n- Date alerte : $ALERT_DATE\n- Règle ID : $RULE_ID\n- Description : $RULE_DESC\n- Agent : $AGENT_NAME\n- Source IP : $SRC_IP\n- Gravité : $SEVERITY\n- Log : $LOG\",
+      \"priority\": $PRIORITY,
+      \"urgency\": 3,
+      \"impact\": 3,
+      \"status\": 1,
+      \"type\": 1,
+      \"itilcategories_id\": 2
+    }
+  }" \
+  "$GLPI_URL/Ticket")
+
+# Fermer la session
+curl -s -X GET \
+  -H "App-Token: $APP_TOKEN" \
+  -H "Session-Token: $SESSION_TOKEN" \
+  "$GLPI_URL/killSession" > /dev/null
+
+# Log local pour suivi
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Ticket créé : Règle=$RULE_ID, Desc=$RULE_DESC, IP=$SRC_IP, Gravité=$SEVERITY, Priorité=$PRIORITY" >> "$LOGFILE"
 ```
 
-Les étapes d'installation et de configuration des droits du script (propriétaire `root:wazuh`, droits `750`) et du fichier de log (`/var/log/glpi_ticket.log`) doivent être respectées270, 271, 273].
+### 5.2 Préparation et Permissions
 
-### 5.2 Configuration de la Réponse Active Wazuh
+1.  Créer le fichier de log : `touch /var/log/glpi_ticket.log`.
+2.  Définir les permissions du script : `chown root:wazuh /var/ossec/active-response/bin/glpi_ticket.sh` et `chmod 750 /var/ossec/active-response/bin/glpi_ticket.sh`.
 
-Le fichier de configuration de Wazuh doit être modifié pour déclencher le script `glpi_ticket.sh` lors d'une alerte SSH (rule.id=`5763`)291].
+### 5.3 Configuration de la Réponse Active Wazuh
+
+Ajouter la configuration suivante dans le fichier de configuration de Wazuh pour déclencher le script lors d'une attaque SSH (Règle ID `5763`) :
 
 ```xml
-<command>
-  <name>glpi_ticket</name>
-  <executable>glpi_ticket.sh</executable>
-  <expect>none</expect>
-  <timeout_allowed>yes</timeout_allowed>
-</command>
+<ossec_config>
+  <command>
+    <name>glpi_ticket</name>
+    <executable>glpi_ticket.sh</executable>
+    <expect>none</expect>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
 
-<active-response>
-  <command>glpi_ticket</command>
-  <location>server</location>
-  <rules_id>5763</rules_id>
-  <timeout>60</timeout>
-</active-response>
+  <active-response>
+    <command>glpi_ticket</command>
+    <location>server</location>
+    <rules_id>5763</rules_id>
+    <timeout>60</timeout>
+  </active-response>
+</ossec_config>
 ```
 
-Le service `wazuh-manager` doit ensuite être redémarré292].
+Redémarrer le service `wazuh-manager` pour appliquer les changements.
 
-### 5.3 Test Réel de la Création de Ticket
+### 5.4 Test Réel de la Création de Ticket
 
-Effectuer une attaque sur le service ssh du serveur DVWA avec Kali Linux 304] et vérifier la création du ticket incident dans GLPI305].
+Effectuer une attaque sur le service SSH du serveur cible (DVWA) à l'aide de Kali Linux pour vérifier que Wazuh détecte l'événement, déclenche le script et crée automatiquement un ticket incident dans GLPI.
 
 -----
 
 ## 7\. Gestion des Tickets Incidents 🛠️
 
-La dernière phase consiste à traiter les tickets qui ont été générés automatiquement par Wazuh318].
+La phase de gestion vise à valider le cycle de vie de l'incident (ITIL) au sein de GLPI.
 
-### 7.1 Connexion et Rôles
+### 7.1 Connexion et Prise en Charge
 
-  * Connectez-vous à l'interface GLPI avec le compte `SOC-N1`319].
-  * Si nécessaire, vérifiez et ajustez les droits de l'utilisateur `SOC-N1` en vous connectant avec le compte administrateur `glpi`319].
+1.  Connectez-vous à l'interface GLPI, idéalement avec le compte de l'analyste **SOC-N1**.
+2.  Accédez à la liste des tickets et identifiez les tickets générés par Wazuh (statut "Nouveau").
+3.  Prenez en charge l'incident pour signifier que le traitement a commencé.
 
-### 7.2 Manipulation des Incidents
+### 7.2 Processus de Résolution
 
-À partir du tableau de bord de GLPI ou de la liste des tickets, l'analyste N1 du SOC effectue les actions suivantes pour gérer l'incident (par exemple, un ticket **Alerte Wazuh - Tentative de brute force SSH**)282]:
+Pour chaque incident :
 
-1.  **Réponse / Prise en Charge** :
+  * **Analyse** : L'analyste examine le contenu du ticket (`Règle ID`, `Source IP`, `Log`) pour comprendre la nature de l'attaque.
+  * **Actions Correctives** : L'analyste prend les mesures nécessaires (ex: bloquer l'IP source au niveau du pare-feu, notifier l'utilisateur concerné).
+  * **Suivi** : Toutes les étapes et actions sont documentées dans l'onglet **Suivi** du ticket GLPI pour assurer la traçabilité.
 
-      * L'analyste prend connaissance de l'alerte (date, règle ID, agent, IP Source, gravité)284, 285, 287, 288, 289].
-      * Il documente les premières analyses et les actions immédiates prises (ex: vérifier le statut du service, isoler temporairement l'agent) en ajoutant des suivis au ticket.
+### 7.3 Escalade et Clôture
 
-2.  **Escalade** :
-
-      * Si l'incident dépasse les compétences du niveau N1 (ex: nécessite une intervention physique ou une investigation forensique complexe), l'analyste peut **escalader** le ticket.
-      * L'escalade consiste généralement à réaffecter le ticket à un groupe de techniciens de niveau supérieur (N2 ou N3) ou à un autre domaine (ex: équipe d'administration système).
-
-3.  **Clôture** :
-
-      * Une fois que l'incident est résolu (par exemple, la cause de la tentative de brute force est identifiée et corrigée, le pare-feu a été mis à jour), l'analyste documente la solution finale.
-      * Le ticket est ensuite **clôturé**, marquant la fin du processus de gestion de l'incident.
-
-L'objectif est de vérifier le bon fonctionnement du processus ITSM complet, de la détection (Wazuh) à la résolution et la clôture (GLPI)319].
-
------
+  * **Escalade** : Si l'incident nécessite une expertise supérieure ou une intervention sur une autre infrastructure, le ticket est **réaffecté** à un autre groupe (N2/N3) ou à un technicien spécialisé.
+  * **Clôture** : Une fois la cause racine traitée et l'incident résolu, l'analyste documente la solution finale et **clôture** le ticket, le faisant passer au statut "Résolu".
