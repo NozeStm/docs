@@ -1,4 +1,3 @@
-````markdown
 # Déploiement de Graylog sur Debian 12 pour centraliser et analyser les logs
 
 ## I. Présentation  
