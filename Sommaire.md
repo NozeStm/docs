@@ -6,7 +6,7 @@
 * **[DNSSEC](dnssec.md)** : Sécurisation du protocole DNS.
 * **[Wazuh](WAZUH.md)** : SIEM et détection d'intrusions.
 * **[GLPI avec Wazuh](glpi_avecwazuh.md)** : Couplage de la gestion de parc avec la supervision de sécurité.
-* **[Graylog](Graylog.md)** : Centralisation et gestion des logs.
+* **[Graylog](graylog.md)** : Centralisation et gestion des logs.
 
 ## 🌐 Infrastructure & Services Réseau
 
