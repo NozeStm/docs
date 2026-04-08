@@ -49,7 +49,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      | sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor
    ```
 
-   ([IT-Connect][1])
 2. Ajouter le dépôt MongoDB :
 
    ```bash
@@ -58,7 +57,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
    ```
 
-   ([IT-Connect][1])
 3. Mettre à jour la liste des paquets et installer MongoDB :
 
    ```bash
@@ -66,7 +64,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo apt-get install -y mongodb-org  
    ```
 
-   ([IT-Connect][1])
 4. **Dépendance manquante** : Debian 12 ne fournit pas `libssl1.1` par défaut. Il faut le télécharger et l’installer manuellement :
 
    ```bash
@@ -74,14 +71,12 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.23_amd64.deb  
    ```
 
-   ([IT-Connect][1])
 5. Relancer l’installation de MongoDB :
 
    ```bash
    sudo apt-get install -y mongodb-org  
    ```
 
-   ([IT-Connect][1])
 6. Activer et démarrer MongoDB :
 
    ```bash
@@ -91,7 +86,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo systemctl --type=service --state=active | grep mongod  
    ```
 
-   ([IT-Connect][1])
 
 ---
 
@@ -104,7 +98,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      | sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/opensearch-keyring
    ```
 
-   ([IT-Connect][1])
 2. Ajouter le dépôt OpenSearch :
 
    ```bash
@@ -113,7 +106,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      | sudo tee /etc/apt/sources.list.d/opensearch-2.x.list
    ```
 
-   ([IT-Connect][1])
 3. Mettre à jour et installer OpenSearch :
 
    ```bash
@@ -135,7 +127,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    plugins.security.disabled: true  
    ```
 
-   ([IT-Connect][1])
 5. Configurer la mémoire JVM d’OpenSearch : éditez `/etc/opensearch/jvm.options` — remplacer :
 
    ```
@@ -158,7 +149,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo sysctl -w vm.max_map_count=262144  
    ```
 
-   ([IT-Connect][1])
 7. Activer et démarrer OpenSearch :
 
    ```bash
@@ -166,8 +156,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo systemctl enable opensearch  
    sudo systemctl restart opensearch  
    ```
-
-   ([IT-Connect][1])
 
 ---
 
@@ -182,7 +170,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo apt-get install graylog-server  
    ```
 
-   ([IT-Connect][1])
 2. Configurer Graylog :
 
    * Générer une clé `password_secret` (96 caractères) :
@@ -191,7 +178,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      pwgen -N 1 -s 96  
      ```
 
-     ([IT-Connect][1])
    * Copier cette clé dans `/etc/graylog/server/server.conf` à l’option `password_secret`. ([IT-Connect][1])
    * Générer un mot de passe admin, puis hash SHA-256 :
 
@@ -199,7 +185,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
      echo -n "TonMotDePasse@" | shasum -a 256  
      ```
 
-     ([IT-Connect][1])
    * Copier le hash dans `root_password_sha2` dans le fichier `server.conf`. ([IT-Connect][1])
    * Configurer l’interface web : `http_bind_address = 0.0.0.0:9000` (pour écouter toutes les interfaces sur le port 9000). ([IT-Connect][1])
    * Configurer `elasticsearch_hosts = http://127.0.0.1:9200` (connexion à OpenSearch local). ([IT-Connect][1])
@@ -209,7 +194,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    sudo systemctl enable --now graylog-server  
    ```
 
-   ([IT-Connect][1])
 4. Se connecter à l’interface Web : ouvre un navigateur vers `http://<IP‑ou‑hostname>:9000`, connecte-toi avec `admin` + ton mot de passe défini.
    Si tu ne peux pas te connecter, consulte les logs Graylog :
 
@@ -217,7 +201,6 @@ sudo apt-get install curl lsb-release ca-certificates gnupg2 pwgen
    tail -f /var/log/graylog-server/server.log  
    ```
 
-   ([IT-Connect][1])
 
 ---
 
@@ -229,7 +212,6 @@ Dans l’interface Graylog :
 2. Clique sur **Create user**, remplis les champs (nom, prénom, email…)
 3. Assigne à ce compte le rôle **administrateur** pour avoir les droits élevés
 4. Cela garantit une meilleure traçabilité : chaque admin utilise son propre compte.
-   ([IT-Connect][1])
 
 ---
 
