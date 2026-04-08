@@ -115,4 +115,37 @@ Dans les paramètres d'une connexion, section "Screen Recording" :
 Guacamole permet de générer un lien de partage temporaire (en lecture seule ou avec contrôle) pour collaborer à distance sur une même session sans transmettre les identifiants.
 
 ---
+
+## 8. Sécurisation : Authentification Multi-Facteurs (TOTP)
+Pour renforcer l'accès au bastion, Guacamole supporte l'utilisation d'un deuxième facteur via des applications comme *Google Authenticator* ou *Authy*.
+
+### Activation de l'extension
+Dans un déploiement Docker, l'activation est extrêmement simple car l'image inclut déjà les extensions. Il suffit d'ajouter une variable d'environnement dans ton fichier `docker-compose.yml` :
+
+```yaml
+# Dans le service guacamole-client
+environment:
+  # ... autres variables ...
+  - TOTP_HOSTNAME=mon-bastion.local  # Identifiant affiché dans l'app d'authentification
+```
+
+### Configuration et Enrôlement
+1.  **Redémarrage** : Relance les conteneurs avec `docker-compose up -d`.
+2.  **Premier Scan** : À la prochaine connexion, après avoir saisi le mot de passe, un **QR Code** s'affichera à l'écran.
+3.  **Liaison** : Scanne ce code avec ton application mobile.
+4.  **Validation** : Saisis le code à 6 chiffres pour valider l'enrôlement.
+
+> [!IMPORTANT]  
+> Une fois activé, le TOTP est requis pour **tous** les utilisateurs. Pense à bien sauvegarder tes codes de secours si tu configures ton accès administrateur.
+
+---
+
+### Note sur le TP SODECAF (802.1X)
+Pour ce qui est du TP sur PacketFence et l'authentification 802.1X, le document se concentre exclusivement sur la méthode **PEAP-MSCHAPv2**. 
+* L'authentification repose sur le couple **identifiant/mot de passe** de l'Active Directory.
+* Les échanges sont protégés par un **tunnel TLS** établi par le serveur RADIUS.
+* Le TOTP n'est **pas inclus** dans ce scénario de TP spécifique, qui mise sur la simplicité de l'intégration native à l'AD.
+
+En revanche, dans un environnement de production réel, PacketFence permettrait effectivement d'ajouter un portail captif avec une étape de double authentification supplémentaire.
+---
 *Documentation réalisée pour un usage personnel - Référence : Tutoriel IT-Connect - 2026*
