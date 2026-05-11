@@ -1,7 +1,3 @@
-Voici la version complète et optimisée de votre documentation technique pour le projet **RADIUS / PacketFence**, conçue spécifiquement pour un rendu professionnel sur **GitHub** (Markdown GFM).
-
----
-
 # 🔐 Sécurisation des accès réseau avec PacketFence (802.1X)
 
 > [!IMPORTANT]
