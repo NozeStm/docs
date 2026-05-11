@@ -1,98 +1,167 @@
-Voici une documentation structurée en Markdown basée sur le TP de la SODECAF pour ton dépôt GitHub.
+# Déploiement d'une authentification 802.1X sécurisée via PacketFence
 
----
+## 1. Introduction et Objectifs
 
-# TP : Authentification Sécurisée 802.1X avec PacketFence (NAC)
+Cette documentation détaille la mise en œuvre d'une solution de contrôle d'accès réseau (NAC) pour l'entreprise **SODECAF**. L'objectif principal est de sécuriser les accès filaires et Wi-Fi en utilisant le standard **IEEE 802.1X** et le serveur **PacketFence**.
 
-## 1. Présentation du Projet
-L'objectif de cette activité est de déployer une solution de **Network Access Control (NAC)** pour l'entreprise **SODECAF** afin de contrôler l'accès aux réseaux filaires et WiFi. La solution retenue est **PacketFence**, un outil open source centralisant les données AAA (Authentification, Autorisation, Accounting) via le protocole RADIUS.
+## 2. Concepts de base
 
-### Architecture Technique
-* **Serveur RADIUS / NAC :** PacketFence (sur Debian 12).
-* **Annuaire :** Active Directory (Windows Server) pour la base d'utilisateurs.
-* **Équipements réseau :** Commutateur Cisco 2960 et Point d'accès WiFi D-Link.
-* **Méthode d'authentification :** PEAP-MSCHAPv2 (Tunnel TLS protégeant les identifiants AD).
+* 
+**RADIUS (Remote Authentication Dial-In User Service)** : Protocole client-serveur centralisant les données AAA (Authentification, Autorisation et Accounting).
 
 
----
+* 
+**802.1X** : Standard définissant le contrôle d'accès basé sur les ports. Il repose sur trois composants :
 
-## 2. Infrastructure Réseau (VLANs & IP)
 
-| VLAN | Nom | Réseau | Passerelle | Rôle |
-| :--- | :--- | :--- | :--- | :--- |
-| **10** | ADMIN | `192.168.10.0/24` | `.254` | [cite_start]Postes administratifs  |
-| **20** | DEV | `192.168.20.0/24` | `.254` | [cite_start]Postes développeurs  |
-| **50** | WIFI | `192.168.50.0/24` | `.254` | [cite_start]Accès sans-fil / Invités  |
-| **-** | SERVEURS | `172.16.0.0/24` | `.254` | [cite_start]Infrastructure (AD, RADIUS)  |
+* 
+**Supplicant** : Le client (ordinateur, smartphone) souhaitant se connecter.
 
----
 
-## 3. Configuration de l'Active Directory
-[cite_start]Pour permettre le mapping dynamique des VLANs, les objets suivants doivent être créés:
+* 
+**Authentificateur / NAS** : Équipement réseau (switch, borne Wi-Fi) relayant la demande.
 
-* **Unités d'Organisation :** `Admin`, `Dev`, `Visiteurs`, `Services`.
-* **Groupes de sécurité :** `Groupe_Admin`, `Groupe_Dev`, `Groupe_Visiteurs`.
-* **Compte de service :** `packetfence` (dans l'UO Services) pour la liaison LDAP.
-* **Paramètre crucial :** Dans les propriétés des comptes (onglet **Appel entrant / Dial-in**), sélectionner **"Autoriser l'accès"**.
 
----
+* 
+**Serveur d'authentification** : Serveur RADIUS (ici PacketFence) acceptant ou refusant l'accès.
 
-## 4. Déploiement de PacketFence
 
-### Installation
-Le serveur est déployé sur une VM Debian 12 avec au moins 4 Go de RAM et une interface en mode bridge.
-* **IP Fixe :** `172.16.0.10`.
-* **DNS :** Doit pointer vers le contrôleur de domaine (`172.16.0.1`).
 
-### Liaison AD et Jointure de Domaine
-1.  **Source d'authentification :** Configurer une source de type "Active Directory" en renseignant le Base DN (`DC=sodecaf, DC=local`) et le compte de service `packetfence`.
-2.  **Jointure au domaine :** Indispensable pour l'authentification **PEAP-MSCHAPv2** via NTLM/Samba.
-    * Menu : `Configuration > Politiques et contrôle d'accès > Domaines AD`.
 
----
+* 
+**Protocoles de sécurité** : Utilisation du cadre **EAP** encapsulé dans un tunnel **PEAP** (TLS) pour sécuriser l'échange des identifiants via **MS-CHAPv2**.
 
-## 5. Politiques de Contrôle d'Accès
-Le NAC attribue un rôle PacketFence en fonction du groupe AD de l'utilisateur, ce rôle détermine ensuite le VLAN injecté sur le port.
 
-### Mapping Rôles & VLANs
-* **Groupe AD `Admin`** $\rightarrow$ Rôle `role_admin` $\rightarrow$ **VLAN 10**.
-* **Groupe AD `Dev`** $\rightarrow$ Rôle `role_dev` $\rightarrow$ **VLAN 20**.
-* **Groupe AD `Visiteurs`** $\rightarrow$ Rôle `role_invite` $\rightarrow$ **VLAN 50**.
 
----
+## 3. Architecture Technique
 
-## 6. Configuration des Équipements (Clients RADIUS)
+Contexte Réseau (Domaine : `sodecaf.local`) 
 
-### Point d'Accès WiFi (D-Link)
-* **SSID :** `SISR-x`.
-* **Sécurité :** WPA2-Enterprise / 802.1X.
-* **Serveur RADIUS :** `172.16.0.10`, Port `1812`, Secret `Btssio2017`.
+* 
+**VLAN ADMIN (10)** : `192.168.10.0/24`.
 
-### Commutateur Cisco 2960 (Filaire)
-Configuration globale pour activer le 802.1X:
+
+* 
+**VLAN DEV (20)** : `192.168.20.0/24`.
+
+
+* 
+**VLAN WIFI (50)** : `192.168.50.0/24`.
+
+
+* 
+**VLAN SERVEURS** : `172.16.0.0/24`.
+
+
+
+### Équipements
+
+* 
+**SRV-WIN1** (Windows Server) : AD, DNS, DHCP (IP : `172.16.0.1`).
+
+
+* 
+**SRV-RADIUS** (PacketFence sur Debian 12) : IP `172.16.0.10`.
+
+
+* 
+**NAS** : Commutateur Cisco 2960 (IP : `192.168.10.200`) et Point d'accès D-Link DAP 1665 (IP : `192.168.50.200`).
+
+
+
+## 4. Étapes de Mise en Œuvre
+
+### 4.1. Configuration de l'Active Directory
+
+1. 
+**Unités d'Organisation (UO)** : Créer `Utilisateurs_SODECAF` avec les sous-UO `Admin`, `Dev`, `Visiteurs` et `Services`.
+
+
+2. 
+**Groupes et Utilisateurs** : Créer les groupes `Groupe_Admin`, `Groupe_Dev` et `Groupe_Visiteurs`, puis y affecter les utilisateurs respectifs (ex: `uadmin1`, `udev1`, `uguest1`).
+
+
+3. 
+**Compte de service** : Créer l'utilisateur `packetfence` dans l'UO `Services` pour la liaison LDAP.
+
+
+4. 
+**Autorisation réseau** : Dans l'onglet "Appel entrant" des propriétés utilisateurs, sélectionner "Autoriser l'accès".
+
+
+
+### 4.2. Configuration de PacketFence
+
+1. 
+**Liaison LDAP** : Ajouter la source Active Directory avec le Bind DN du compte `packetfence` et tester la connexion.
+
+
+2. 
+**Jointure au domaine** : Indispensable pour l'authentification PEAP-MSCHAPv2 via NTLM. Redémarrer les services `ntlm-auth-pi` et `radiusd-auth` après jointure.
+
+
+3. 
+**Mapping des rôles** : Créer des règles d'accès basées sur l'attribut LDAP `memberOf`.
+
+
+* 
+`memberOf` égal à `CN=Groupe_Admin...` $\rightarrow$ rôle `role_admin`.
+
+
+* 
+`memberOf` égal à `CN=Groupe_Dev...` $\rightarrow$ rôle `role_dev`.
+
+
+
+
+
+### 4.3. Configuration des Équipements Réseau (NAS)
+
+#### Commutateur Cisco (Exemple partiel)
+
 ```bash
-aaa new-model
+[cite_start]aaa new-model [cite: 6537]
 radius server PACKETFENCE
- address ipv4 172.16.0.10 auth-port 1812 acct-port 1813
- key Btssio2017
-dot1x system-auth-control
-```
+ [cite_start]address ipv4 172.16.0.10 auth-port 1812 acct-port 1813 [cite: 6540]
+ [cite_start]key Btssio2017 [cite: 6541]
+[cite_start]dot1x system-auth-control [cite: 6550]
 
-Configuration d'une interface (ex: ports 1 à 4):
-```bash
 interface range FastEthernet0/1 - 4
- switchport mode access
- authentication port-control auto
- dot1x pae authenticator
+ [cite_start]description 8021X_WIRED_VLAN10 [cite: 6551]
+ [cite_start]authentication port-control auto [cite: 6555]
+ [cite_start]dot1x pae authenticator [cite: 6556]
+
 ```
 
----
+#### Point d'accès Wi-Fi
 
-## 7. Tests et Validation
-* **Côté Client :** Sur Windows, le service `dot3svc` (Configuration automatique câblée) doit être démarré pour activer l'onglet "Authentification" dans les propriétés de la carte réseau.
-* **Côté Serveur :** Vérifier les accès dans le **Journal d'audit RADIUS** de PacketFence.
-    * Un succès affiche le statut **"Accept"** avec le VLAN ID correspondant (ex: `Tunnel-Private-Group-Id = "10"`).
-    * Un échec (mauvais mot de passe) affiche **"Reject"** avec une erreur MS-CHAP.
+* Déclarer le SSID en mode **WPA2-Enterprise / 802.1X**.
 
----
-*Documentation générée pour le contexte SODECAF - 2026*.
+
+* Pointer vers l'IP de PacketFence (`172.16.0.10`) avec la clé secrète `Btssio2017`.
+
+
+
+### 4.4. Configuration du Poste Client (Windows)
+
+1. Activer le service **dot3svc** (Configuration automatique de réseau câblé) via PowerShell : `net start dot3svc`.
+
+
+2. Dans les propriétés de la carte Ethernet (onglet Authentification), activer l'authentification IEEE 802.1X et choisir **Microsoft: Protected EAP (PEAP)**.
+
+
+3. Dans "Paramètres supplémentaires", forcer le mode en "Authentification utilisateur".
+
+
+
+## 5. Validation et Audit
+
+Les tests permettent de confirmer l'affectation dynamique des VLANs :
+
+* Un utilisateur du `Groupe_Admin` doit obtenir une IP dans le VLAN 10.
+
+
+* Un utilisateur du `Groupe_Dev` doit obtenir une IP dans le VLAN 20.
+
+
+* Les logs RADIUS dans PacketFence (menu Audit) doivent afficher un statut **Accept** avec le `Tunnel-Private-Group-Id` correspondant au VLAN cible.
